@@ -161,3 +161,10 @@ document.getElementById("submitBooking").onclick = async () => {
 
 document.getElementById("year").textContent = new Date().getFullYear();
 renderMenu();
+
+/* populate the treatment dropdown on page load so it always works */
+document.getElementById("treatmentSelect").innerHTML = TREATMENTS.map(t =>
+  `<option value="${t.id}">${t.name} — ${fmtPrice(t.price)}</option>`).join("");
+
+/* close the popup with the Escape key as well */
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !modal.hidden) closeModal(); });
