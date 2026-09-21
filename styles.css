@@ -440,6 +440,7 @@ p{max-width:64ch}
   font-style:normal;margin-top:var(--s4);
   color:var(--on-ink-dim);font-size:.93rem;line-height:1.6;
 }
+.footer-credit{width:100%;padding-top:var(--s4);color:var(--on-ink-dim)}
 .footer{background:var(--ink);color:var(--on-ink);padding:var(--s9) 0 var(--s5)}
 .footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:var(--s8);padding-bottom:var(--s8)}
 .footer-wordmark{font-family:var(--display);font-size:1.7rem;color:var(--on-ink)}
