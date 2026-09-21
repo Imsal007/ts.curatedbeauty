@@ -232,6 +232,46 @@ document.addEventListener("keydown", e => {
   if (e.key === "Escape" && !waCard.hidden) { setWa(false); waToggle.focus(); }
 });
 
+/* ---------- 4c. Contact form (Formspree) ---------- */
+const contactForm = document.getElementById("contactForm");
+const cfStatus = document.getElementById("cfStatus");
+
+contactForm.addEventListener("submit", async e => {
+  e.preventDefault();
+  const btn = document.getElementById("cfSubmit");
+  cfStatus.className = "form-status";
+
+  if (contactForm.action.includes("PASTE_YOUR_FORMSPREE_ID")) {
+    cfStatus.textContent = "The message form isn't connected yet — please use WhatsApp for now.";
+    cfStatus.classList.add("err");
+    return;
+  }
+
+  btn.disabled = true;
+  const original = btn.textContent;
+  btn.textContent = "Sending…";
+  try {
+    const res = await fetch(contactForm.action, {
+      method: "POST",
+      body: new FormData(contactForm),
+      headers: { Accept: "application/json" }
+    });
+    if (res.ok) {
+      contactForm.reset();
+      cfStatus.textContent = "Thank you — your message is with me. I'll reply as soon as I can.";
+      cfStatus.classList.add("ok");
+    } else {
+      cfStatus.textContent = "That didn't send. Please try again, or message me on WhatsApp.";
+      cfStatus.classList.add("err");
+    }
+  } catch {
+    cfStatus.textContent = "That didn't send. Please try again, or message me on WhatsApp.";
+    cfStatus.classList.add("err");
+  }
+  btn.disabled = false;
+  btn.textContent = original;
+});
+
 /* ---------- 5. Scroll state: masthead rule, thumb-zone book bar ---------- */
 const masthead = document.querySelector(".masthead");
 const bookBar = document.getElementById("bookBar");

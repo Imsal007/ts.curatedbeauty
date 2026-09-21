@@ -360,7 +360,77 @@ p{max-width:64ch}
   border-top:1px solid var(--bone-line);color:var(--on-bone-dim);
 }
 
+/* ---------- FAQ ---------- */
+.faq{background:var(--ink);color:var(--on-ink);padding:var(--s10) 0}
+.faq-list{max-width:860px;margin-top:var(--s7);border-top:1px solid var(--ink-line)}
+.faq-item{border-bottom:1px solid var(--ink-line)}
+.faq-item summary{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--s5);
+  min-height:64px;padding:var(--s4) 0;cursor:pointer;
+  font-family:var(--display);font-size:1.22rem;color:var(--on-ink);
+  list-style:none;
+}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-item summary::after{
+  content:"";flex-shrink:0;width:12px;height:12px;
+  border-right:1px solid var(--blush);border-bottom:1px solid var(--blush);
+  transform:rotate(45deg) translate(-2px,-2px);
+  transition:transform .26s var(--ease);
+}
+.faq-item[open] summary::after{transform:rotate(225deg) translate(-2px,-2px)}
+.faq-item p{
+  padding:0 0 var(--s5);max-width:70ch;
+  color:var(--on-ink-dim);font-size:.98rem;
+}
+
+/* ---------- Contact ---------- */
+.contact-sec{background:var(--bone);padding:var(--s10) 0}
+.contact-grid{display:grid;grid-template-columns:.85fr 1.15fr;gap:var(--s9);align-items:start}
+.clinic-address{
+  font-style:normal;font-size:1.05rem;line-height:1.7;
+  color:var(--on-bone);margin-bottom:var(--s6);
+}
+.clinic-address strong{display:block;font-weight:600;margin-bottom:var(--s1)}
+.contact-lines{border-top:1px solid var(--bone-line)}
+.contact-lines > div{
+  display:flex;justify-content:space-between;gap:var(--s4);
+  padding:var(--s3) 0;border-bottom:1px solid var(--bone-line);
+}
+.contact-lines dt{color:var(--on-bone-dim);font-size:.9rem}
+.contact-lines dd{font-size:.95rem;text-align:right}
+.contact-lines a{
+  display:inline-flex;align-items:center;min-height:44px;
+  color:var(--blush-deep);text-decoration:none;
+}
+.contact-lines a:hover{text-decoration:underline}
+.contact-note{margin-top:var(--s5);color:var(--on-bone-dim);font-size:.92rem}
+
+.contact-form{
+  background:var(--bone-2);border:1px solid var(--bone-line);
+  padding:var(--s7) var(--s6);
+}
+.contact-form h3{font-size:1.5rem;margin-bottom:var(--s5)}
+/* light-ground overrides — the base .field is themed for the dark modal */
+.contact-sec .field-label{color:var(--on-bone-dim)}
+.contact-sec .field{
+  background:#F7F5F1;color:var(--on-bone);
+  border-color:var(--on-bone-dim);
+}
+.contact-sec .field:focus{border-color:var(--blush-deep)}
+.contact-sec textarea.field{min-height:120px;resize:vertical}
+.contact-sec .gdpr-check{color:var(--on-bone-dim)}
+.contact-sec .gdpr-check input{accent-color:var(--blush-deep)}
+/* the base .opt is tuned for the dark modal; it's unreadable on bone */
+.contact-sec .field-label .opt{color:var(--on-bone-dim);opacity:1}
+.form-status{font-size:.9rem;margin:var(--s3) 0 0;min-height:1.2em}
+.form-status.err{color:var(--danger)}
+.form-status.ok{color:#2F6B4F}
+
 /* ---------- Footer ---------- */
+.footer-address{
+  font-style:normal;margin-top:var(--s4);
+  color:var(--on-ink-dim);font-size:.93rem;line-height:1.6;
+}
 .footer{background:var(--ink);color:var(--on-ink);padding:var(--s9) 0 var(--s5)}
 .footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:var(--s8);padding-bottom:var(--s8)}
 .footer-wordmark{font-family:var(--display);font-size:1.7rem;color:var(--on-ink)}
@@ -511,7 +581,7 @@ select.field{appearance:none;background-image:linear-gradient(45deg,transparent 
   font-size:.85rem;color:var(--on-ink-dim);
   margin:var(--s3) 0;cursor:pointer;line-height:1.5;
 }
-.gdpr-check input{width:18px;height:18px;margin-top:3px;flex-shrink:0;accent-color:var(--blush)}
+.gdpr-check input{width:24px;height:24px;margin-top:1px;flex-shrink:0;accent-color:var(--blush)}
 
 .form-error{color:#E8A79E;font-size:.88rem;margin-top:var(--s3)}
 
@@ -535,6 +605,7 @@ select.field{appearance:none;background-image:linear-gradient(45deg,transparent 
   .about-figures{max-width:460px}
   .about-fig-inset{right:0}
   .menu-head,.aftercare-head{grid-template-columns:1fr;gap:var(--s4)}
+  .contact-grid{grid-template-columns:1fr;gap:var(--s7)}
   .voices-grid{grid-template-columns:1fr;gap:var(--s7)}
   .footer-grid{grid-template-columns:1fr 1fr;gap:var(--s7)}
   .footer-brand-col{grid-column:1 / -1}
@@ -548,10 +619,15 @@ select.field{appearance:none;background-image:linear-gradient(45deg,transparent 
     flex-direction:column;align-items:stretch;gap:0;
     background:var(--ink);border-bottom:1px solid var(--ink-line);
     padding:var(--s4) var(--s5) var(--s6);
-    transform:translateY(-102%);transition:transform .34s var(--ease);
+    /* The sheet sits at top:var(--masthead-h), so hiding it needs its own
+       height PLUS that offset — translateY(-102%) alone leaves the bottom of
+       the panel on screen, covering the hamburger and blocking every tap. */
+    transform:translateY(calc(-100% - var(--masthead-h) - 8px));
+    visibility:hidden;
+    transition:transform .34s var(--ease),visibility .34s var(--ease);
     max-height:calc(100dvh - var(--masthead-h));overflow-y:auto;
   }
-  .nav.open{transform:none}
+  .nav.open{transform:none;visibility:visible}
 
   /* while the sheet is open: lock the page, dim it, and get the
      floating controls out of the way rather than fighting z-index */
@@ -601,6 +677,9 @@ select.field{appearance:none;background-image:linear-gradient(45deg,transparent 
   .wa{bottom:calc(80px + env(safe-area-inset-bottom))}
   .wa-float{width:52px;height:52px}
 
+  .contact-form{padding:var(--s6) var(--s5)}
+  .contact-lines > div{flex-direction:column;gap:2px}
+  .contact-lines dd{text-align:left}
   .modal{padding:var(--s7) var(--s5) var(--s6);max-height:100dvh;max-width:none}
   .modal-overlay{padding:0;align-items:flex-end}
   .time-slots{grid-template-columns:repeat(2,1fr)}
