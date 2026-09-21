@@ -17,16 +17,23 @@ function renderMenu() {
       <span class="menu-name">${t.name}</span>
       <span class="menu-duration">${t.minutes} min</span>
       <span class="menu-price">${fmtPrice(t.price)}</span>
-      <button class="btn btn-gold menu-book" data-book="${t.id}">Book</button>`;
+      <button class="btn btn-accent menu-book" data-book="${t.id}">Book</button>`;
     document.getElementById("menu-" + t.group).appendChild(row);
   });
 }
 
 /* ---------- 2. Modal wiring ---------- */
 const modal = document.getElementById("bookingModal");
+const modalPanel = modal.querySelector(".modal");
 let chosenTreatment = null, chosenDate = null, chosenTime = null;
+let lastFocused = null;
+
+const FOCUSABLE = 'a[href],button:not([disabled]),input,select,textarea,[tabindex]:not([tabindex="-1"])';
+const visibleFocusable = () =>
+  [...modalPanel.querySelectorAll(FOCUSABLE)].filter(el => el.offsetParent !== null);
 
 function openModal(treatmentId) {
+  lastFocused = document.activeElement;
   modal.hidden = false;
   document.body.style.overflow = "hidden";
   chosenTreatment = treatmentId ? TREATMENTS.find(t => t.id === treatmentId) : null;
@@ -40,13 +47,20 @@ function openModal(treatmentId) {
   const dateInput = document.getElementById("dateInput");
   dateInput.min = d.toISOString().split("T")[0];
   dateInput.value = dateInput.min;
+  // focus the step's own first control, not the close button, so the
+  // dialog announces what it is before how to leave it
+  const step = modalPanel.querySelector(".booking-step:not([hidden])");
+  const first = (step && step.querySelector(FOCUSABLE)) || visibleFocusable()[0];
+  if (first) first.focus();
 }
 function closeModal() {
   modal.hidden = true;
   document.body.style.overflow = "";
+  if (lastFocused) lastFocused.focus();
 }
 function showStep(n) {
   document.querySelectorAll(".booking-step").forEach(s => s.hidden = +s.dataset.step !== n);
+  modalPanel.scrollTop = 0;
 }
 document.addEventListener("click", e => {
   const btn = e.target.closest("[data-book]");
@@ -57,8 +71,6 @@ document.getElementById("modalDone").onclick = closeModal;
 modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
 document.querySelectorAll("[data-back]").forEach(b =>
   b.onclick = () => showStep(+b.dataset.back));
-document.getElementById("navToggle").onclick = () =>
-  document.getElementById("mainNav").classList.toggle("open");
 
 /* step 1 → 2 */
 document.getElementById("toStep2").onclick = () => {
@@ -78,10 +90,10 @@ async function loadSlots() {
   const note = document.getElementById("slotNote");
   const next = document.getElementById("toStep4");
   next.disabled = true; chosenTime = null;
-  box.innerHTML = SLOT_TIMES.map(t => `<div class="time-slot" data-time="${t}">${t}</div>`).join("");
+  box.innerHTML = SLOT_TIMES.map(t => `<button type="button" class="time-slot" data-time="${t}">${t}</button>`).join("");
   note.textContent = "Checking availability…";
   if (APPS_SCRIPT_URL.startsWith("PASTE_")) {
-    note.textContent = "Booking system not connected yet — see the setup guide.";
+    note.textContent = "Live availability isn't connected yet — pick a time and I'll confirm it personally.";
     return;
   }
   try {
@@ -89,7 +101,9 @@ async function loadSlots() {
       method: "POST",
       body: JSON.stringify({ action: "checkSlots", date: chosenDate, minutes: chosenTreatment.minutes, times: SLOT_TIMES })
     });
-    const taken = await res.json();
+    const data = await res.json();
+    // Apps Script replies { taken: [...] }; tolerate a bare array too
+    const taken = Array.isArray(data) ? data : (data.taken || []);
     document.querySelectorAll(".time-slot").forEach(s => {
       if (taken.includes(s.dataset.time)) s.classList.add("taken");
     });
@@ -108,12 +122,16 @@ document.getElementById("timeSlots").addEventListener("click", e => {
   chosenTime = slot.dataset.time;
   document.getElementById("toStep4").disabled = false;
 });
+const friendlyDate = iso =>
+  new Date(iso + "T12:00:00").toLocaleDateString("en-GB",
+    { weekday: "long", day: "numeric", month: "long" });
+
 /* step 3 → 4 */
 document.getElementById("toStep4").onclick = () => {
-  const d = new Date(chosenDate + "T" + chosenTime);
   document.getElementById("bookingSummary").innerHTML =
-    `<strong>${chosenTreatment.name}</strong><br>${d.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"})} at ${chosenTime} · ${fmtPrice(chosenTreatment.price)}<br>` +
-    `Deposit due: ${fmtPrice(Math.round(chosenTreatment.price * DEPOSIT_PERCENT / 100))}`;
+    `<strong>${chosenTreatment.name}</strong><br>` +
+    `${friendlyDate(chosenDate)} at ${chosenTime}<br>` +
+    `${fmtPrice(chosenTreatment.price)}, deposit ${fmtPrice(Math.round(chosenTreatment.price * DEPOSIT_PERCENT / 100))}`;
   showStep(4);
 };
 /* step 4: submit */
@@ -150,14 +168,81 @@ document.getElementById("submitBooking").onclick = async () => {
     } catch { ok = false; }
   }
   const wa = document.getElementById("waContinue");
-  const msg = encodeURIComponent(`Hi Tania ✨, I've just booked ${chosenTreatment.name} on ${chosenDate} at ${chosenTime}. My name is ${name}.`);
+  const msg = encodeURIComponent(`Hi Tania, I've just booked ${chosenTreatment.name} on ${chosenDate} at ${chosenTime}. My name is ${name}.`);
   wa.href = `https://wa.me/447388562289?text=${msg}`;
   document.getElementById("successText").innerHTML = ok
-    ? `Thank you, <strong>${name.split(" ")[0]}</strong> — your appointment request for <strong>${chosenTreatment.name}</strong> on <strong>${chosenDate} at ${chosenTime}</strong> is in. Check your inbox for confirmation and your deposit link. Once the deposit is paid, your appointment is fully confirmed.`
-    : `Thank you, <strong>${name.split(" ")[0]}</strong> — please tap below to send me your booking on WhatsApp and I'll confirm it personally.`;
+    ? `Thank you, <strong>${name.split(" ")[0]}</strong> — your request for <strong>${chosenTreatment.name}</strong> on <strong>${friendlyDate(chosenDate)} at ${chosenTime}</strong> is in. Check your inbox for confirmation and your deposit link. Once the deposit is paid, your appointment is fully confirmed.`
+    : `Thank you, <strong>${name.split(" ")[0]}</strong> — tap below to send me your booking on WhatsApp and I'll confirm it personally.`;
   showStep(5);
-  btn.disabled = false; btn.textContent = "Confirm Booking →";
+  btn.disabled = false; btn.textContent = "Confirm booking";
 };
+
+/* ---------- 3. Keyboard: escape to close, tab stays inside ---------- */
+document.addEventListener("keydown", e => {
+  if (modal.hidden) return;
+  if (e.key === "Escape") { closeModal(); return; }
+  if (e.key !== "Tab") return;
+  const items = visibleFocusable();
+  if (!items.length) return;
+  const first = items[0], last = items[items.length - 1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+});
+
+/* ---------- 4. Navigation ---------- */
+const nav = document.getElementById("mainNav");
+const navToggle = document.getElementById("navToggle");
+
+function setNav(open) {
+  nav.classList.toggle("open", open);
+  document.body.classList.toggle("nav-open", open);
+  navToggle.setAttribute("aria-expanded", String(open));
+  navToggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+}
+navToggle.onclick = () => setNav(!nav.classList.contains("open"));
+nav.addEventListener("click", e => { if (e.target.closest("a")) setNav(false); });
+
+/* tap anywhere outside the sheet, or press Escape, to dismiss */
+document.addEventListener("click", e => {
+  if (!nav.classList.contains("open")) return;
+  if (!e.target.closest("#mainNav") && !e.target.closest("#navToggle")) setNav(false);
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && nav.classList.contains("open")) setNav(false);
+});
+/* rotating to a desktop width must not leave the body scroll-locked */
+addEventListener("resize", () => { if (innerWidth > 760) setNav(false); });
+
+/* ---------- 4b. WhatsApp panel — opens on tap, never on its own ---------- */
+const waWrap = document.getElementById("wa");
+const waCard = document.getElementById("waCard");
+const waToggle = document.getElementById("waToggle");
+
+function setWa(open) {
+  waCard.hidden = !open;
+  waToggle.setAttribute("aria-expanded", String(open));
+  waToggle.setAttribute("aria-label", open ? "Close WhatsApp panel" : "Message Tania on WhatsApp");
+}
+waToggle.onclick = () => setWa(waCard.hidden);
+document.getElementById("waClose").onclick = () => { setWa(false); waToggle.focus(); };
+document.addEventListener("click", e => {
+  if (!waCard.hidden && !e.target.closest("#wa")) setWa(false);
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && !waCard.hidden) { setWa(false); waToggle.focus(); }
+});
+
+/* ---------- 5. Scroll state: masthead rule, thumb-zone book bar ---------- */
+const masthead = document.querySelector(".masthead");
+const bookBar = document.getElementById("bookBar");
+const hero = document.querySelector(".hero");
+
+const onScroll = () => {
+  masthead.classList.toggle("is-stuck", window.scrollY > 8);
+  bookBar.classList.toggle("is-shown", window.scrollY > hero.offsetHeight * .6);
+};
+addEventListener("scroll", onScroll, { passive: true });
+onScroll();
 
 document.getElementById("year").textContent = new Date().getFullYear();
 renderMenu();
@@ -165,6 +250,3 @@ renderMenu();
 /* populate the treatment dropdown on page load so it always works */
 document.getElementById("treatmentSelect").innerHTML = TREATMENTS.map(t =>
   `<option value="${t.id}">${t.name} — ${fmtPrice(t.price)}</option>`).join("");
-
-/* close the popup with the Escape key as well */
-document.addEventListener("keydown", e => { if (e.key === "Escape" && !modal.hidden) closeModal(); });
