@@ -440,7 +440,7 @@ p{max-width:64ch}
   font-style:normal;margin-top:var(--s4);
   color:var(--on-ink-dim);font-size:.93rem;line-height:1.6;
 }
-.footer-credit{width:100%;padding-top:var(--s4);color:var(--on-ink-dim)}
+.footer-credit{text-align:right;font-size:.75rem;letter-spacing:.01em}
 .footer{background:var(--ink);color:var(--on-ink);padding:var(--s9) 0 var(--s5)}
 .footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:var(--s8);padding-bottom:var(--s8)}
 .footer-wordmark{font-family:var(--display);font-size:1.7rem;color:var(--on-ink)}
@@ -457,9 +457,11 @@ p{max-width:64ch}
 .footer-col a:hover{color:var(--blush)}
 .footer-base{
   border-top:1px solid var(--ink-line);padding-top:var(--s5);padding-bottom:var(--s5);
-  display:flex;justify-content:space-between;flex-wrap:wrap;gap:var(--s3);
+  display:grid;grid-template-columns:repeat(3,1fr);align-items:baseline;gap:var(--s4);
   font-size:.82rem;color:var(--on-ink-dim);
 }
+.footer-base > p{margin:0}
+.footer-base > p:nth-child(2){text-align:center}
 
 /* ---------- WhatsApp: expands on tap, never on its own ---------- */
 .wa{
@@ -665,6 +667,9 @@ select.field{appearance:none;background-image:linear-gradient(45deg,transparent 
   .results-grid{grid-template-columns:1fr;gap:var(--s8)}
   .aftercare-grid{grid-template-columns:1fr;gap:var(--s6)}
   .footer-grid{grid-template-columns:1fr;gap:var(--s6)}
+  /* three columns can't hold their own on a phone — stack and centre */
+  .footer-base{grid-template-columns:1fr;gap:var(--s2);text-align:center}
+  .footer-base > p:nth-child(2),.footer-credit{text-align:center}
 
   /* Price list becomes a stacked record on phone, not a squeezed table */
   .menu-row{
