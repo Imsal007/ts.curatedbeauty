@@ -43,5 +43,7 @@ const TREATMENTS = [
 const CLINIC_DAYS = [1,2,3,4,5,6];        // Mon–Sat
 const SLOT_TIMES = ["09:30","11:00","12:30","14:00","15:30","17:00"];
 
-/* >>> PASTE YOUR APPS SCRIPT WEB APP URL HERE (Setup Guide step 12) <<< */
-const APPS_SCRIPT_URL = "PASTE_YOUR_WEB_APP_URL_HERE";
+/* Apps Script web app endpoint (project "TCB Automations").
+   Currently deployed on the SAL Digital test account — redeploying keeps this
+   URL stable, so this only changes if the whole project moves accounts. */
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw7DgDV6oWGtmfW7sBgQIB522mNf8JFybI76ZNXkO7k1yeKl4yt4-HReqRm1E-r0Cm5/exec";
