@@ -342,6 +342,18 @@
         <div><dt>Appointments</dt><dd>Monday to Saturday, 9:30am to 5pm</dd></div>
       </dl>
       <p class="contact-note">To book, use the booking form — it takes about a minute. Use the message form if you have a question first.</p>
+
+      <div class="map-wrap">
+        <iframe
+          class="map-frame"
+          title="Map showing 260 Pentonville Road, London N1 9JY"
+          src="https://www.openstreetmap.org/export/embed.html?bbox=-0.1244%2C51.5290%2C-0.1164%2C51.5330&amp;layer=mapnik&amp;marker=51.5310145%2C-0.1204451"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"></iframe>
+        <a class="btn btn-ink map-cta"
+           href="https://www.google.com/maps/search/?api=1&amp;query=260%20Pentonville%20Road%2C%20London%20N1%209JY"
+           target="_blank" rel="noopener">Get directions</a>
+      </div>
     </div>
 
     <form class="contact-form" id="contactForm" action="https://formspree.io/f/PASTE_YOUR_FORMSPREE_ID" method="POST">
@@ -542,6 +554,12 @@
         "postalCode": "N1 9JY",
         "addressCountry": "GB"
       },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 51.5310145,
+        "longitude": -0.1204451
+      },
+      "hasMap": "https://www.google.com/maps/search/?api=1&query=260%20Pentonville%20Road%2C%20London%20N1%209JY",
       "areaServed": [
         { "@type": "City", "name": "London" },
         { "@type": "AdministrativeArea", "name": "Islington" }
