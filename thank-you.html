@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deposit received — Tania's Curated Beauty</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0F1714">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* This page only ever needs a centred card — everything else the main
+     stylesheet defines (nav, hero, menu…) is simply unused here rather than
+     duplicated, so a design change to one automatically matches the other. */
+  body{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:var(--s6)}
+  .ty-card{
+    max-width:560px;width:100%;background:var(--ink-raise);color:var(--on-ink);
+    border:1px solid var(--ink-line);padding:var(--s8) var(--s7);text-align:center;
+  }
+  .ty-mark{
+    width:64px;height:64px;margin:0 auto var(--s6);border-radius:50%;
+    background:var(--blush);color:var(--ink);display:flex;align-items:center;justify-content:center;
+  }
+  .ty-card h1{font-family:var(--display);font-size:2.4rem;margin-bottom:var(--s4)}
+  .ty-card p{color:var(--on-ink-dim);line-height:1.6;margin-bottom:var(--s3)}
+  .ty-actions{display:flex;flex-direction:column;gap:var(--s3);margin-top:var(--s6)}
+</style>
+</head>
+<body>
+
+<div class="ty-card">
+  <div class="ty-mark" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="28" height="28"><path d="M4 12.5l5.5 5.5L20 7.5" stroke="currentColor" stroke-width="1.75" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <h1>Your deposit is in</h1>
+  <p>Thank you — your appointment is fully confirmed. A confirmation with the full details is already in your inbox, and you'll get a reminder as your visit gets closer.</p>
+  <p>Anything at all on your mind before then — just message me.</p>
+  <div class="ty-actions">
+    <a class="btn btn-accent btn-block" href="https://wa.me/447388562289?text=Hi%20Tania%2C%20I%27ve%20just%20paid%20my%20deposit.">Message me on WhatsApp</a>
+    <a class="btn btn-ghost btn-block" href="index.html#aftercare">Read aftercare in advance</a>
+    <a class="btn btn-ghost btn-block" href="index.html">Back to the site</a>
+  </div>
+</div>
+
+</body>
+</html>
