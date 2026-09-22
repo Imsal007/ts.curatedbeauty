@@ -10,9 +10,12 @@ const fmtPrice = p => CURRENCY + p.toLocaleString("en-GB");
 
 /* ---------- 1. Render the menu ---------- */
 function renderMenu() {
+  const perGroupIndex = {}; // stagger position within its own group, not the flat list
   TREATMENTS.forEach(t => {
     const row = document.createElement("div");
     row.className = "menu-row";
+    row.style.setProperty("--i", perGroupIndex[t.group] = (perGroupIndex[t.group] || 0));
+    perGroupIndex[t.group]++;
     row.innerHTML = `
       <span class="menu-name">${t.name}</span>
       <span class="menu-duration">${t.minutes} min</span>
@@ -38,7 +41,7 @@ function openModal(treatmentId) {
   document.body.style.overflow = "hidden";
   chosenTreatment = treatmentId ? TREATMENTS.find(t => t.id === treatmentId) : null;
   chosenDate = chosenTime = null;
-  showStep(1);
+  showStep(1, "none");
   const sel = document.getElementById("treatmentSelect");
   sel.innerHTML = TREATMENTS.map(t =>
     `<option value="${t.id}" ${t.id === treatmentId ? "selected" : ""}>${t.name} — ${fmtPrice(t.price)}</option>`).join("");
@@ -58,8 +61,23 @@ function closeModal() {
   document.body.style.overflow = "";
   if (lastFocused) lastFocused.focus();
 }
-function showStep(n) {
-  document.querySelectorAll(".booking-step").forEach(s => s.hidden = +s.dataset.step !== n);
+const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* dir: "fwd" slides in from the right (continuing through the flow),
+   "back" from the left, "none" for the initial open (the modal itself
+   already animates in, so the first step shouldn't animate twice). */
+function showStep(n, dir = "fwd") {
+  document.querySelectorAll(".booking-step").forEach(s => {
+    const isTarget = +s.dataset.step === n;
+    s.hidden = !isTarget;
+    if (isTarget && dir !== "none" && !reducedMotion) {
+      s.animate(
+        [{ opacity: 0, transform: `translateX(${dir === "back" ? -14 : 14}px)` },
+         { opacity: 1, transform: "translateX(0)" }],
+        { duration: 260, easing: "cubic-bezier(.22,1,.36,1)" }
+      );
+    }
+  });
   modalPanel.scrollTop = 0;
 }
 document.addEventListener("click", e => {
@@ -70,19 +88,19 @@ document.getElementById("modalClose").onclick = closeModal;
 document.getElementById("modalDone").onclick = closeModal;
 modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
 document.querySelectorAll("[data-back]").forEach(b =>
-  b.onclick = () => showStep(+b.dataset.back));
+  b.onclick = () => showStep(+b.dataset.back, "back"));
 
 /* step 1 → 2 */
 document.getElementById("toStep2").onclick = () => {
   chosenTreatment = TREATMENTS.find(t => t.id === document.getElementById("treatmentSelect").value);
-  showStep(2);
+  showStep(2, "fwd");
 };
 /* step 2 → 3 */
 document.getElementById("toStep3").onclick = () => {
   chosenDate = document.getElementById("dateInput").value;
   if (!chosenDate) return;
   loadSlots();
-  showStep(3);
+  showStep(3, "fwd");
 };
 /* step 3: fetch availability from Apps Script */
 async function loadSlots() {
@@ -132,7 +150,7 @@ document.getElementById("toStep4").onclick = () => {
     `<strong>${chosenTreatment.name}</strong><br>` +
     `${friendlyDate(chosenDate)} at ${chosenTime}<br>` +
     `${fmtPrice(chosenTreatment.price)}, deposit ${fmtPrice(Math.round(chosenTreatment.price * DEPOSIT_PERCENT / 100))}`;
-  showStep(4);
+  showStep(4, "fwd");
 };
 /* step 4: submit */
 document.getElementById("submitBooking").onclick = async () => {
@@ -173,7 +191,7 @@ document.getElementById("submitBooking").onclick = async () => {
   document.getElementById("successText").innerHTML = ok
     ? `Thank you, <strong>${name.split(" ")[0]}</strong> — your request for <strong>${chosenTreatment.name}</strong> on <strong>${friendlyDate(chosenDate)} at ${chosenTime}</strong> is in. Check your inbox for confirmation and your deposit link. Once the deposit is paid, your appointment is fully confirmed.`
     : `Thank you, <strong>${name.split(" ")[0]}</strong> — tap below to send me your booking on WhatsApp and I'll confirm it personally.`;
-  showStep(5);
+  showStep(5, "fwd");
   btn.disabled = false; btn.textContent = "Confirm booking";
 };
 
@@ -299,3 +317,39 @@ renderMenu();
 /* populate the treatment dropdown on page load so it always works */
 document.getElementById("treatmentSelect").innerHTML = TREATMENTS.map(t =>
   `<option value="${t.id}">${t.name} — ${fmtPrice(t.price)}</option>`).join("");
+
+/* ---------- 6. Reveal-once-on-scroll: price rows, before/after results ---------- */
+if (!reducedMotion && "IntersectionObserver" in window) {
+  const revealOnce = new IntersectionObserver((entries, obs) => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      e.target.classList.add("is-in");
+      obs.unobserve(e.target);
+    });
+  }, { threshold: .15 });
+  document.querySelectorAll(".menu").forEach(g => revealOnce.observe(g));
+  const resultsGrid = document.querySelector(".results-grid");
+  if (resultsGrid) revealOnce.observe(resultsGrid);
+} else {
+  // no IO, or the visitor asked for less motion: show everything as-is
+  document.querySelectorAll(".menu, .results-grid").forEach(el => el.classList.add("is-in"));
+}
+
+/* ---------- 7. Hero stat count-up — only the numeric one ("7+ years") ---------- */
+if (!reducedMotion) {
+  document.querySelectorAll(".fact dd").forEach(dd => {
+    const m = dd.textContent.match(/^(\d+)(.*)$/);
+    if (!m) return; // "Every price listed" etc. aren't numeric — leave as-is
+    const target = +m[1], suffix = m[2];
+    dd.textContent = "0" + suffix;
+    setTimeout(() => {
+      const start = performance.now(), duration = 900;
+      (function frame(now) {
+        const p = Math.min(1, (now - start) / duration);
+        const eased = 1 - Math.pow(1 - p, 3);
+        dd.textContent = Math.round(eased * target) + suffix;
+        if (p < 1) requestAnimationFrame(frame);
+      })(start);
+    }, 340); // matches .facts{animation-delay:.34s} in styles.css — counts up as the row arrives, not before
+  });
+}

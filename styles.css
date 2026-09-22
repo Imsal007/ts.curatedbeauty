@@ -277,8 +277,11 @@ p{max-width:64ch}
   gap:var(--s5);align-items:center;
   padding:var(--s5) var(--s2);
   border-bottom:1px solid var(--ink-line);
-  transition:background .2s var(--ease);
+  transition:background .2s var(--ease),opacity .5s var(--ease),transform .5s var(--ease);
+  transition-delay:0s,calc(var(--i,0) * 45ms),calc(var(--i,0) * 45ms);
+  opacity:0;transform:translateY(14px);
 }
+.menu.is-in .menu-row{opacity:1;transform:none}
 .menu-row:hover{background:var(--ink-raise)}
 .menu-name{font-size:1.02rem;line-height:1.35;color:var(--on-ink)}
 .menu-duration{font-size:.82rem;color:var(--on-ink-dim);white-space:nowrap}
@@ -311,9 +314,17 @@ p{max-width:64ch}
 /* ---------- Results ---------- */
 .results{background:var(--bone);padding:var(--s10) 0}
 .results-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--s7);margin-top:var(--s7)}
+.result{
+  opacity:0;transform:translateY(18px);
+  transition:opacity .6s var(--ease),transform .6s var(--ease);
+}
+.results-grid.is-in .result{opacity:1;transform:none}
+.results-grid.is-in .result:nth-child(2){transition-delay:.13s}
 /* No forced ratio: a before/after composite must never be cropped.
    The two source images are within 0.4% of the same ratio, so they align anyway. */
-.result img{width:100%}
+.result picture{display:block;overflow:hidden}
+.result img{width:100%;transition:transform .8s var(--ease)}
+.result:hover img{transform:scale(1.035)}
 .result figcaption{padding-top:var(--s5)}
 .result h3{font-size:1.25rem;margin-bottom:var(--s2)}
 .result p{color:var(--on-bone-dim);font-size:.95rem}
@@ -721,4 +732,6 @@ select.field{appearance:none;background-image:linear-gradient(45deg,transparent 
   }
   .hero-copy > *,.hero-figure{animation:none;opacity:1;transform:none}
   .book-bar{transition:none}
+  .menu-row,.result{opacity:1!important;transform:none!important}
+  .result:hover img{transform:none}
 }
