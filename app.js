@@ -177,22 +177,43 @@ document.getElementById("submitBooking").onclick = async () => {
     dob: document.getElementById("clientDob").value,
     referralCode: document.getElementById("referralCode").value.trim().toUpperCase(),
   };
-  let ok = true;
+  let ok = true, checkoutUrl = null;
   if (!APPS_SCRIPT_URL.startsWith("PASTE_")) {
     try {
       const res = await fetch(APPS_SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
       const out = await res.json();
       ok = out.ok !== false;
+      checkoutUrl = out.checkoutUrl || null;
     } catch { ok = false; }
   }
   const wa = document.getElementById("waContinue");
   const msg = encodeURIComponent(`Hi Tania, I've just booked ${chosenTreatment.name} on ${chosenDate} at ${chosenTime}. My name is ${name}.`);
   wa.href = `https://wa.me/447388562289?text=${msg}`;
-  document.getElementById("successText").innerHTML = ok
-    ? `Thank you, <strong>${name.split(" ")[0]}</strong> — your request for <strong>${chosenTreatment.name}</strong> on <strong>${friendlyDate(chosenDate)} at ${chosenTime}</strong> is in. Check your inbox for confirmation and your deposit link. Once the deposit is paid, your appointment is fully confirmed.`
-    : `Thank you, <strong>${name.split(" ")[0]}</strong> — tap below to send me your booking on WhatsApp and I'll confirm it personally.`;
+
+  const payNow = document.getElementById("payNow");
+  if (ok && checkoutUrl) {
+    // Straight to payment rather than making them go find the link in their
+    // inbox — the email carries the same link too, as the fallback if they
+    // close this tab or come back to it later.
+    payNow.href = checkoutUrl;
+    payNow.hidden = false;
+    wa.classList.replace("btn-accent", "btn-quiet"); // pay is now the primary action, WhatsApp secondary
+    document.getElementById("successText").innerHTML =
+      `Thank you, <strong>${name.split(" ")[0]}</strong> — your request for <strong>${chosenTreatment.name}</strong> on <strong>${friendlyDate(chosenDate)} at ${chosenTime}</strong> is in. One tap and your deposit is paid — taking you there now.`;
+  } else {
+    payNow.hidden = true;
+    wa.classList.replace("btn-quiet", "btn-accent");
+    document.getElementById("successText").innerHTML = ok
+      ? `Thank you, <strong>${name.split(" ")[0]}</strong> — your request for <strong>${chosenTreatment.name}</strong> on <strong>${friendlyDate(chosenDate)} at ${chosenTime}</strong> is in. Check your inbox for confirmation and your deposit link. Once the deposit is paid, your appointment is fully confirmed.`
+      : `Thank you, <strong>${name.split(" ")[0]}</strong> — tap below to send me your booking on WhatsApp and I'll confirm it personally.`;
+  }
   showStep(5, "fwd");
   btn.disabled = false; btn.textContent = "Confirm booking";
+
+  // Auto-continue to Stripe after a beat — long enough to register the
+  // booking succeeded, not so long it feels like nothing is happening.
+  // The button above is the fallback if a popup/extension blocks this.
+  if (ok && checkoutUrl) setTimeout(() => { window.location.href = checkoutUrl; }, 1800);
 };
 
 /* ---------- 3. Keyboard: escape to close, tab stays inside ---------- */
