@@ -276,12 +276,21 @@ contactForm.addEventListener("submit", async e => {
 const masthead = document.querySelector(".masthead");
 const bookBar = document.getElementById("bookBar");
 const hero = document.querySelector(".hero");
+const footer = document.querySelector(".footer");
 
 const onScroll = () => {
   masthead.classList.toggle("is-stuck", window.scrollY > 8);
-  bookBar.classList.toggle("is-shown", window.scrollY > hero.offsetHeight * .6);
+  const pastHero = window.scrollY > hero.offsetHeight * .6;
+  /* Hide once the footer is in view — otherwise the bar sits fixed all the
+     way to the bottom of the page with only a slim margin above the footer
+     credit link, which real device chrome (dynamic address bar, safe-area
+     insets, larger system font sizes) can easily eat into and cover. Nobody
+     needs a floating "Book now" while they're already reading the footer. */
+  const footerVisible = footer.getBoundingClientRect().top < innerHeight;
+  bookBar.classList.toggle("is-shown", pastHero && !footerVisible);
 };
 addEventListener("scroll", onScroll, { passive: true });
+addEventListener("resize", onScroll, { passive: true });
 onScroll();
 
 document.getElementById("year").textContent = new Date().getFullYear();
